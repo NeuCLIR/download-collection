@@ -1,7 +1,7 @@
 # NeuCLIR Collection 2022
 
 This repository contains the scripts for downloading and validating scripts for the documents. 
-Document ids are stored in `resources/{lang}/ids.*.jsonl.gz`
+Document ids are stored in `resource/{lang}/ids.*.jsonl.gz`
 
 Required packages for the scripts are recorded in `requirements.txt`. 
 
@@ -36,7 +36,7 @@ the result file. The unsorted file will be renamed as `docs.jsonl.bak`. You coul
 
 ```bash
 python fix_document_order.py --raw_download_file ./data/{lang}/docs.jsonl \
-                             --id_file ./resources/hc4/{lang}/ids.*.jsonl.gz \
+                             --id_file ./resource{lang}/ids.*.jsonl.gz \
                              --check_hash
 ```
 
