@@ -3,3 +3,4 @@ newspaper3k
 warcio
 requests
 tqdm
+chinese-converter

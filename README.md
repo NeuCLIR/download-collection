@@ -1,5 +1,7 @@
 # NeuCLIR Collection 2022
 
+**If you are registered as a participant of the TREC NeuCLIR Track 2022, you can access the downloaded collection [here](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/dlawrie1_jh_edu/EZ3YNnFccslJi3aq94cUMVkB6tLVZxyLSeOkk46vGqqcOg?e=uk4oZN) with password provided on the TREC website.**
+
 This repository contains the scripts for downloading and validating scripts for the documents. 
 Document ids are stored in `resource/{lang}/ids.*.jsonl.gz`
 
@@ -40,3 +42,15 @@ python fix_document_order.py --raw_download_file ./data/{lang}/docs.jsonl \
                              --check_hash
 ```
 
+## Converting the Chinese Character Sets
+
+The Chinese document collection contains both traditional and simplified Chinese characters from their original source. 
+We provide a script for converting the documents to either traditional or simplified characters if the users would like 
+to have an unified character set. The following command creates a `docs.{traditional, simplified}.jsonl` file in the 
+same directory as the original `docs.jsonl` file. 
+
+```bash
+python convert_chinese_char.py --document_file ./data/zho/docs.jsonl \
+                               --convert_to {traditional, simplified} \
+                               --line_count 3179209
+```
