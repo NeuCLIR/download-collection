@@ -1,4 +1,4 @@
-# NeuCLIR Collection 2022
+# NeuCLIR Collection 1
 
 This repository contains the scripts for downloading and validating scripts for the documents. 
 Document ids are stored in `resource/{lang}/ids.*.jsonl.gz`
@@ -11,7 +11,7 @@ the documents from Common Crawl. Please contact us if you have documents with mi
 ## Download Documents
 
 To download the documents from Common Crawl, please use the following command.
-If you plan to use this collection with [`ir_datasets`](https://ir-datasets.com/), please specify `~/.ir_datasets/neuclir22` 
+If you plan to use this collection with [`ir_datasets`](https://ir-datasets.com/), please specify `~/.ir_datasets/neuclir/1` 
 as the storage or make a soft link to to the directory you wish to store the documents. The document ids and hashs are 
 stored in `resource/{lang}/ids.*.jsonl.gz`. 
 
