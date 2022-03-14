@@ -1,4 +1,4 @@
-# NeuCLIR Collection 2022
+# NeuCLIR Collection 1
 
 **If you are registered as a participant of the TREC NeuCLIR Track 2022, you can access the downloaded collection [here](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/dlawrie1_jh_edu/EZ3YNnFccslJi3aq94cUMVkB6tLVZxyLSeOkk46vGqqcOg?e=uk4oZN) with password provided on the TREC website.**
 
@@ -13,7 +13,7 @@ the documents from Common Crawl. Please contact us if you have documents with mi
 ## Download Documents
 
 To download the documents from Common Crawl, please use the following command.
-If you plan to use this collection with [`ir_datasets`](https://ir-datasets.com/), please specify `~/.ir_datasets/neuclir22` 
+If you plan to use this collection with [`ir_datasets`](https://ir-datasets.com/), please specify `~/.ir_datasets/neuclir/1` 
 as the storage or make a soft link to to the directory you wish to store the documents. The document ids and hashs are 
 stored in `resource/{lang}/ids.*.jsonl.gz`. 
 
