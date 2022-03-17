@@ -1,6 +1,6 @@
 # NeuCLIR Collection 1
 
-**If you are registered as a participant of the TREC NeuCLIR Track 2022, you can access the downloaded collection [here](https://livejohnshopkins-my.sharepoint.com/:u:/g/personal/dlawrie1_jh_edu/EZ3YNnFccslJi3aq94cUMVkB6tLVZxyLSeOkk46vGqqcOg?e=uk4oZN) with password provided on the TREC website.**
+**If you are registered as a participant of the TREC NeuCLIR Track 2022, you can download collection from the link provided on [this page](https://trec.nist.gov/act_part/tracks2022.html). Note that you will need trec2022 credentials to download this file (provided when you register for TREC).**
 
 This repository contains the scripts for downloading and validating scripts for the documents. 
 Document ids are stored in `resource/{lang}/ids.*.jsonl.gz`
