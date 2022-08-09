@@ -1,8 +1,5 @@
 name: Verify hashs of the documents
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       number_of_jobs:
