@@ -27,7 +27,6 @@ jobs:
         job: ${{ fromJson(needs.generate-job-strategy-matrix.outputs.job-strategy-matrix) }}
       max-parallel: ${{ fromJson(github.event.inputs.number_of_jobs) }} # Run jobs in parallel
     steps:
-      - name: Job index ${{ matrix.job }}
       - uses: actions/checkout@v2
         with:
           path: download
