@@ -15,10 +15,8 @@ jobs:
     steps:
       - id: generate
         run: |
-          echo $NUMBER_OF_JOBS
-          arr=[`seq -s , 0 $NUMBER_OF_JOBS | sed 's/,$//'`]
-          echo $arr
-          echo "::set-output name=job-strategy-matrix::$arr"
+          JOB_STRATEGY_MATRIX=$(node -e "let r=[]; for(let i = 1; i <= process.env.NUMBER_OF_JOBS; i++) { r.push(i) }; console.log(JSON.stringify(r));")
+          echo "::set-output name=job-strategy-matrix::$JOB_STRATEGY_MATRIX"
         env:
           NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs }}
   job:
@@ -27,7 +25,7 @@ jobs:
     timeout-minutes: 3600 # 60 hour timeout
     strategy:
       matrix:
-        job: ${{ needs.generate-job-strategy-matrix.outputs.job-strategy-matrix }}
+        job: ${{ fromJson(needs.generate-job-strategy-matrix.outputs.job-strategy-matrix) }}
       max-parallel: 1 # Run jobs serially
       # max-parallel: ${{ github.event.inputs.number_of_jobs }} # Run jobs in parallel
     steps:
