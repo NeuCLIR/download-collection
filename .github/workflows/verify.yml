@@ -15,7 +15,9 @@ jobs:
     steps:
       - id: generate
         run: |
+          echo $ NUMBER_OF_JOBS
           JOB_STRATEGY_MATRIX=$(node -e "let r=[]; for(let i = 1; i <= process.env.NUMBER_OF_JOBS; i++) { r.push(i) }; console.log(JSON.stringify(r));")
+          echo "12312312312"
           echo "::set-output name=job-strategy-matrix::$JOB_STRATEGY_MATRIX"
         env:
           NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs }}
