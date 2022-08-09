@@ -27,7 +27,7 @@ jobs:
         job: ${{ fromJson(needs.generate-job-strategy-matrix.outputs.job-strategy-matrix) }}
       max-parallel: ${{ fromJson(github.event.inputs.number_of_jobs) }} # Run jobs in parallel
     steps:
-      - run: echo "This is job index ${{ matrix.job }}"
+      - name: Job index ${{ matrix.job }}
       - uses: actions/checkout@v2
         with:
           path: download
@@ -49,12 +49,12 @@ jobs:
             --rus ./resource/rus/ids.*.jsonl.gz \
             --jobs 1 --rank ${{ matrix.job }} \
             --total_rank ${{ github.event.inputs.number_of_jobs }} \
-            --limit 1
+            --limit 5
       - name: Count and Report
         run: |
           cd download/data
-          total=`download_log.${{ matrix.job }}.txt | grep "\[hash-" | wc -l | awk '{print $1}'`
-          mismatch=`download_log.${{ matrix.job }}.txt | grep "\[hash-mismatch" | wc -l | awk '{print $1}'`
+          total=`cat download_log.${{ matrix.job }}.txt | grep "\[hash-" | wc -l | awk '{print $1}'`
+          mismatch=`cat download_log.${{ matrix.job }}.txt | grep "\[hash-mismatch" | wc -l | awk '{print $1}'`
           printf "Hash mismatch: $mismatch/$total (%.2f%%)\n" `bc $mismatch/$total*100`
       - uses: actions/upload-artifact@v3
         with: 
