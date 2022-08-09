@@ -221,7 +221,7 @@ def main(args):
                       saving=(not args.no_save), cc_base_url=args.cc_base_url)
     it = to_capture.items() 
     if args.limit > 0:
-        it = map(lambda p: p[0], zip(it, range(args.limit)))
+        it = map(lambda p: p[0], zip(it, range(args.limit+1)))
     if args.jobs > 1:
         with Pool(args.jobs) as pool:
             list(pool.imap_unordered(

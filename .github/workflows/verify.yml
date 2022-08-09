@@ -15,7 +15,7 @@ jobs:
     steps:
       - id: generate
         run: |
-          echo "::set-output name=job-strategy-matrix::[`seq -s , $NUMBER_OF_JOBS | sed 's/,$//'`]"
+          echo "::set-output name=job-strategy-matrix::[`seq -s , 0 $((NUMBER_OF_JOBS-1)) | sed 's/,$//'`]"
         env:
           NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs }}
   download-and-verify:
@@ -50,6 +50,12 @@ jobs:
             --jobs 1 --rank ${{ matrix.job }} \
             --total_rank ${{ github.event.inputs.number_of_jobs }} \
             --limit 1
+      - name: Count and Report
+        run: |
+          cd download/data
+          total=`download_log.${{ matrix.job }}.txt | grep "\[hash-" | wc -l | awk '{print $1}'`
+          mismatch=`download_log.${{ matrix.job }}.txt | grep "\[hash-mismatch" | wc -l | awk '{print $1}'`
+          printf "Hash mismatch: $mismatch/$total (%.2f%%)\n" `bc $mismatch/$total*100`
       - uses: actions/upload-artifact@v3
         with: 
           path: ./download/data/*
