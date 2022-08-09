@@ -91,10 +91,11 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10, saving=Tr
                     }
 
                     for lang_used in want_idx[rid]:
-                        if want_idx[rid][lang_used] is not None and want_idx[rid][lang_used] != hash_doc(doc):
+                        got_hash = hash_doc(doc)
+                        if want_idx[rid][lang_used] is not None and want_idx[rid][lang_used] != got_hash:
                             if validate:
                                 raise AssertionError(f"md5 hash not matched in {lang_used}")
-                            logging.warning(f'record-id: {rid}, warn: md5 hash not matched in {lang_used}')
+                            logging.warning(f'record-id: {rid}, {lang_used}, warn: md5 hash not matched, expecting {want_idx[rid][lang_used]} but got {got_hash}')
                         if saving:
                             saved_docs[lang_used].append(doc)
 
@@ -199,7 +200,7 @@ def main(args):
     # Dict[cc_file, Dict[id, Dict[langs, hashs] ] ]
     to_capture = defaultdict(lambda : defaultdict(dict))
     for lang, id_files in lang_id_file.items():
-        for id_file in tqdm(id_files, desc=f'building dict for {lang}'):
+        for id_file in tqdm(id_files, desc=f'building dict for {lang}', disable=args.rank>-1):
             fp = gzip.open(id_file) if id_file.endswith('.gz') else open(id_file)
             for line in tqdm(fp, desc=f'{lang} -- {id_file}', leave=False):
                 line = json.loads(line)
@@ -216,22 +217,23 @@ def main(args):
     worker_ = partial(process_cc_file, out_paths=out_paths, validate=args.check_hash, 
                       disable_tqdm=(args.jobs>1 or args.rank>-1), retry=args.retry,
                       saving=(not args.no_save), cc_base_url=args.cc_base_url)
+    it = to_capture.items() 
+    if args.limit > 0:
+        it = map(lambda p: p[0], zip(it, range(args.limit)))
     if args.jobs > 1:
         with Pool(args.jobs) as pool:
             list(pool.imap_unordered(
                 worker_,
-                tqdm(to_capture.items(), desc="All files")
+                tqdm(it, desc="All files")
             ))
     elif args.total_rank > 1 and args.rank > -1:
         list(map(worker_, 
             map(lambda p: p[1], 
-                filter(lambda x: x[0]%args.total_rank == args.rank, 
-                    enumerate(to_capture.items()) 
-                )
+                filter(lambda x: x[0]%args.total_rank == args.rank, enumerate(it) )
             )
         ))
     else:
-        list(map(worker_, tqdm(to_capture.items(), desc="All files")))
+        list(map(worker_, tqdm(it, desc="All files")))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Download documents from CC.")
@@ -258,6 +260,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_save', action='store_true', default=False)
     parser.add_argument('--rank', type=int, default=-1)
     parser.add_argument('--total_rank', type=int, default=1)
+    parser.add_argument('--limit', type=int, default=-1)
 
     main(parser.parse_args())
 

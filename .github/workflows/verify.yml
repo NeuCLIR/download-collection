@@ -15,18 +15,42 @@ jobs:
     steps:
       - id: generate
         run: |
-          arr=[`seq -s , $NUMBER_OF_JOBS | sed 's/,$//'`]
-          echo "::set-output name=job-strategy-matrix::$arr"
+          echo "::set-output name=job-strategy-matrix::[`seq -s , $NUMBER_OF_JOBS | sed 's/,$//'`]"
         env:
           NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs }}
-  job:
+  download-and-verify:
     needs: generate-job-strategy-matrix
     runs-on: ubuntu-latest
     timeout-minutes: 3600 # 60 hour timeout
     strategy:
       matrix:
         job: ${{ fromJson(needs.generate-job-strategy-matrix.outputs.job-strategy-matrix) }}
-      # max-parallel: 1 # Run jobs serially
       max-parallel: ${{ fromJson(github.event.inputs.number_of_jobs) }} # Run jobs in parallel
     steps:
-      - run: echo "This is job number ${{ matrix.job }}"
+      - run: echo "This is job index ${{ matrix.job }}"
+      - uses: actions/checkout@v2
+        with:
+          path: download
+          ref: ${{ github.ref }}
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          cd download
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Download
+        run: |
+          cd download
+          python download_documents.py --storage ./data/ \
+            --zho ./resource/zho/ids.*.jsonl.gz \
+            --fas ./resource/fas/ids.*.jsonl.gz \
+            --rus ./resource/rus/ids.*.jsonl.gz \
+            --jobs 1 --rank ${{ matrix.job }} \
+            --total_rank ${{ github.event.inputs.number_of_jobs }} \
+            --limit 1
+      - uses: actions/upload-artifact@v3
+        with: 
+          path: ./download/data/
+      
