@@ -95,7 +95,9 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10, saving=Tr
                         if want_idx[rid][lang_used] is not None and want_idx[rid][lang_used] != got_hash:
                             if validate:
                                 raise AssertionError(f"md5 hash not matched in {lang_used}")
-                            logging.warning(f'record-id: {rid}, {lang_used}, warn: md5 hash not matched, expecting {want_idx[rid][lang_used]} but got {got_hash}')
+                            logging.warning(f'[hash-mismatch] record-id: {rid}, {lang_used}, expecting {want_idx[rid][lang_used]} but got {got_hash}')
+                        else: 
+                            logging.info(f'[hash-matched] record-id: {rid}, {lang_used}')
                         if saving:
                             saved_docs[lang_used].append(doc)
 
@@ -202,7 +204,7 @@ def main(args):
     for lang, id_files in lang_id_file.items():
         for id_file in tqdm(id_files, desc=f'building dict for {lang}', disable=args.rank>-1):
             fp = gzip.open(id_file) if id_file.endswith('.gz') else open(id_file)
-            for line in tqdm(fp, desc=f'{lang} -- {id_file}', leave=False):
+            for line in tqdm(fp, desc=f'{lang} -- {id_file}', leave=False, disable=args.rank>-1):
                 line = json.loads(line)
                 if line['id'] not in downloaded_doc_ids[lang]:
                     md5 = line['md5'] if 'md5' in line else None
