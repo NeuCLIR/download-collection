@@ -13,7 +13,8 @@ jobs:
     outputs:
       job-strategy-matrix: ${{ steps.generate.outputs.job-strategy-matrix }}
     steps:
-      - id: generate
+      - name: Generate indices
+        id: generate
         run: |
           echo "::set-output name=job-strategy-matrix::[`seq -s , 0 $((NUMBER_OF_JOBS-1)) | sed 's/,$//'`]"
         env:
@@ -39,7 +40,7 @@ jobs:
           cd download
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-      - name: Download
+      - name: Download and Verify
         run: |
           cd download
           python download_documents.py --storage ./data/ \
@@ -47,14 +48,13 @@ jobs:
             --fas ./resource/fas/ids.*.jsonl.gz \
             --rus ./resource/rus/ids.*.jsonl.gz \
             --jobs 1 --rank ${{ matrix.job }} \
-            --total_rank ${{ github.event.inputs.number_of_jobs }} \
-            --limit 5
+            --total_rank ${{ github.event.inputs.number_of_jobs }}
       - name: Count and Report
         run: |
           cd download/data
           total=`cat download_log.${{ matrix.job }}.txt | grep "\[hash-" | wc -l | awk '{print $1}'`
           mismatch=`cat download_log.${{ matrix.job }}.txt | grep "\[hash-mismatch" | wc -l | awk '{print $1}'`
-          printf "Hash mismatch: $mismatch/$total (%.2f%%)\n" `bc $mismatch/$total*100`
+          printf "Hash mismatch: $mismatch/$total (%.2f%%)\n" `echo "$mismatch/$total*100" | bc`
       - uses: actions/upload-artifact@v3
         with: 
           path: ./download/data/*
