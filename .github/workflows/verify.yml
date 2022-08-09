@@ -15,8 +15,8 @@ jobs:
     steps:
       - id: generate
         run: |
-          JOB_STRATEGY_MATRIX=$(node -e "let r=[]; for(let i = 1; i <= process.env.NUMBER_OF_JOBS; i++) { r.push(i) }; console.log(JSON.stringify(r));")
-          echo "::set-output name=job-strategy-matrix::$JOB_STRATEGY_MATRIX"
+          arr=[`seq -s , $NUMBER_OF_JOBS | sed 's/,$//'`]
+          echo "::set-output name=job-strategy-matrix::$arr"
         env:
           NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs }}
   job:
@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         job: ${{ fromJson(needs.generate-job-strategy-matrix.outputs.job-strategy-matrix) }}
-      max-parallel: 1 # Run jobs serially
-      # max-parallel: ${{ github.event.inputs.number_of_jobs }} # Run jobs in parallel
+      # max-parallel: 1 # Run jobs serially
+      max-parallel: ${{ fromJson(github.event.inputs.number_of_jobs) }} # Run jobs in parallel
     steps:
       - run: echo "This is job number ${{ matrix.job }}"
