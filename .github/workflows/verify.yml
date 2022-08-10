@@ -1,4 +1,8 @@
 name: Verify hashs of the documents
+concurrency: 
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 on:
   schedule:
     - cron: '0 8 * * 0' # run every sunday at (around) 8:00am UTC
@@ -57,7 +61,7 @@ jobs:
             --fas ./resource/fas/ids.*.jsonl.gz \
             --rus ./resource/rus/ids.*.jsonl.gz \
             --jobs 1 --rank ${{ matrix.job }} ${{ github.event.inputs.additional_args }} \
-            --total_rank ${{ github.event.inputs.number_of_jobs }}
+            --total_rank ${{ github.event.inputs.number_of_jobs || 100 }}
       - name: Count and Report
         run: |
           cd download/data
