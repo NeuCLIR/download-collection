@@ -1,7 +1,4 @@
 name: Verify hashs of the documents
-concurrency: 
-  group: ${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
 on:
   schedule:
     - cron: '0 8 * * 0' # run every sunday at (around) 8:00am UTC
