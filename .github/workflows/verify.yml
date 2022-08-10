@@ -5,9 +5,6 @@ on:
   push: 
     branch: 
       - main
-    inputs: 
-      number_of_jobs: 100
-      additional_args: ""
   workflow_dispatch:
     inputs:
       number_of_jobs:
