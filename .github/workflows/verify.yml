@@ -1,5 +1,16 @@
 name: Verify hashs of the documents
+concurrency: 
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 on:
+  schedule:
+    - cron: '0 8 * * 0' # run every sunday at (around) 8:00am UTC
+  push: 
+    branch: 
+      - main
+    inputs: 
+      number_of_jobs: 100
+      additional_args: ""
   workflow_dispatch:
     inputs:
       number_of_jobs:
@@ -22,7 +33,7 @@ jobs:
         run: |
           echo "::set-output name=job-strategy-matrix::[`seq -s , 0 $((NUMBER_OF_JOBS-1)) | sed 's/,$//'`]"
         env:
-          NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs }}
+          NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs || 100 }}
   download-and-verify:
     needs: generate-job-strategy-matrix
     runs-on: ubuntu-latest
@@ -58,7 +69,7 @@ jobs:
           cd download/data
           total=`wc -l */*.jsonl | head -n 3 | awk '{s+=$1} END {print s}'`
           mismatch=`cat download_log.${{ matrix.job }}.txt | grep "\[hash-mismatch" | wc -l | awk '{print $1}'`
-          printf "Hash mismatch: $mismatch/$total (%.2f%%)\n" `echo "$mismatch/$total*100" | bc`
+          printf "Hash mismatch: $mismatch/$total (%.4f%%)\n" `echo "$mismatch/$total*100" | bc`
       - name: Upload Logs
         uses: actions/upload-artifact@v3
         with: 
@@ -97,6 +108,7 @@ jobs:
           path: ./download/data
       - name: test
         run: |
+          cd download
           python generate_action_report.py >> $GITHUB_STEP_SUMMARY
       
       
