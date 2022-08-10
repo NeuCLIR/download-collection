@@ -96,8 +96,8 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10, saving=Tr
                             if validate:
                                 raise AssertionError(f"md5 hash not matched in {lang_used}")
                             logging.warning(f'[hash-mismatch] record-id: {rid}, {lang_used}, expecting {want_idx[rid][lang_used]} but got {got_hash}')
-                        else: 
-                            logging.info(f'[hash-matched] record-id: {rid}, {lang_used}')
+                        # else: 
+                        #     logging.info(f'[hash-matched] record-id: {rid}, {lang_used}')
                         if saving:
                             saved_docs[lang_used].append(doc)
 

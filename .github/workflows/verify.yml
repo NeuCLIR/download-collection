@@ -6,6 +6,10 @@ on:
         description: "Number of Jobs"
         required: true
         default: 20
+      additional_args:
+        description: "Additional arugments for download script"
+        required: false
+        default: "--limit 5"
 
 jobs:
   generate-job-strategy-matrix:
@@ -47,15 +51,48 @@ jobs:
             --zho ./resource/zho/ids.*.jsonl.gz \
             --fas ./resource/fas/ids.*.jsonl.gz \
             --rus ./resource/rus/ids.*.jsonl.gz \
-            --jobs 1 --rank ${{ matrix.job }} \
+            --jobs 1 --rank ${{ matrix.job }} ${{ github.event.inputs.additional_args }} \
             --total_rank ${{ github.event.inputs.number_of_jobs }}
       - name: Count and Report
         run: |
           cd download/data
-          total=`cat download_log.${{ matrix.job }}.txt | grep "\[hash-" | wc -l | awk '{print $1}'`
+          total=`wc -l */*.jsonl | head -n 3 | awk '{s+=$1} END {print s}'`
           mismatch=`cat download_log.${{ matrix.job }}.txt | grep "\[hash-mismatch" | wc -l | awk '{print $1}'`
           printf "Hash mismatch: $mismatch/$total (%.2f%%)\n" `echo "$mismatch/$total*100" | bc`
-      - uses: actions/upload-artifact@v3
+      - name: Upload Logs
+        uses: actions/upload-artifact@v3
         with: 
-          path: ./download/data/*
+          name: logs
+          path: ./download/data/*.txt
+          retention-days: 180
+      - name: Compress 
+        run: | 
+          gzip -9 */*.jsonl
+      - name: Upload documents
+        uses: actions/upload-artifact@v3
+        with: 
+          name: docs
+          path: ./download/data/*/*.jsonl.gz
+          retention-days: 14
+
+  aggregate-and-report:
+    needs: [download-and-verify]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+        with:
+          path: download
+          ref: ${{ github.ref }}
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - uses: actions/download-artifact@v3
+        with:
+          name: logs
+          path: ./download/data
+      - name: test
+        run: |
+          ls -R
+      
       
