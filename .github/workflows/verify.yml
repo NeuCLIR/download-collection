@@ -64,10 +64,10 @@ jobs:
         with: 
           name: logs
           path: ./download/data/*.txt
-          retention-days: 180
+          retention-days: 90
       - name: Compress 
         run: | 
-          gzip -9 */*.jsonl
+          gzip -9 download/data/*/*.jsonl
       - name: Upload documents
         uses: actions/upload-artifact@v3
         with: 
@@ -93,6 +93,6 @@ jobs:
           path: ./download/data
       - name: test
         run: |
-          ls -R
+          ls -R >> $GITHUB_STEP_SUMMARY
       
       
