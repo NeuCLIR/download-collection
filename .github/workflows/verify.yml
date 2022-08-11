@@ -18,7 +18,7 @@ on:
       additional_args:
         description: "Additional arugments for download script"
         required: false
-        default: "--limit 5"
+        default: ""
 
 jobs:
   generate-job-strategy-matrix:
