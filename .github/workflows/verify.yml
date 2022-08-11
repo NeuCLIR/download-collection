@@ -31,7 +31,7 @@ jobs:
         run: |
           echo "::set-output name=job-strategy-matrix::[`seq -s , 0 $((NUMBER_OF_JOBS-1)) | sed 's/,$//'`]"
         env:
-          NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs || 100 }}
+          NUMBER_OF_JOBS: ${{ github.event.inputs.number_of_jobs || 256 }}
   download-and-verify:
     needs: generate-job-strategy-matrix
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
     strategy:
       matrix:
         job: ${{ fromJson(needs.generate-job-strategy-matrix.outputs.job-strategy-matrix) }}
-      max-parallel: ${{ fromJson(github.event.inputs.number_of_jobs || 100) }} # Run jobs in parallel
+      max-parallel: ${{ fromJson(github.event.inputs.number_of_jobs || 256) }} # Run jobs in parallel
     steps:
       - uses: actions/checkout@v2
         with:
@@ -61,7 +61,7 @@ jobs:
             --fas ./resource/fas/ids.*.jsonl.gz \
             --rus ./resource/rus/ids.*.jsonl.gz \
             --jobs 1 --rank ${{ matrix.job }} ${{ github.event.inputs.additional_args }} \
-            --total_rank ${{ github.event.inputs.number_of_jobs || 100 }}
+            --total_rank ${{ github.event.inputs.number_of_jobs || 256 }}
       - name: Count and Report
         run: |
           cd download/data
@@ -108,5 +108,9 @@ jobs:
         run: |
           cd download
           python generate_action_report.py >> $GITHUB_STEP_SUMMARY
-      
-      
+      - name: Upload report
+        uses: actions/upload-artifact@v3
+        with: 
+          name: report
+          path: ./download/report.jsonl.gz
+          retention-days: 14

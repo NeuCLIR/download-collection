@@ -1,4 +1,5 @@
 import pandas as pd
+import gzip, json
 from pathlib import Path
 
 # hard-coded a lot of things with the github action
@@ -22,6 +23,11 @@ def main():
     for lang in mismatches:
         print(f"## {lang} ({len(mismatches[lang])}/{ndocs[lang]} -- {len(mismatches[lang])/ndocs[lang]*100:.4f}%)")
         print(pd.DataFrame(mismatches[lang]).to_markdown(index=False))
+    
+    with gzip.open('report.jsonl.gz', 'wt') as fw:
+        for lang in mismatches:
+            for l in mismatches[lang]:
+                fw.write(json.dumps({'lang': lang, **l}))
 
 if __name__ == '__main__':
     main()
