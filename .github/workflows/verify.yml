@@ -80,9 +80,9 @@ jobs:
       - name: Upload documents
         uses: actions/upload-artifact@v3
         with: 
-          name: docs
+          name: raw_docs
           path: ./download/data/*/*.jsonl.gz
-          retention-days: 14
+          retention-days: 2
 
   aggregate-and-report:
     needs: [download-and-verify]
@@ -102,7 +102,6 @@ jobs:
           python -m pip install pandas tabulate
       - uses: actions/download-artifact@v3
         with:
-          name: logs
           path: ./download/data
       - name: test
         run: |
@@ -113,4 +112,23 @@ jobs:
         with: 
           name: report
           path: ./download/report.jsonl.gz
-          retention-days: 14
+          retention-days: 90
+      - name: Aggregate docs.*.jsonl.gz
+        run: |
+          cd download/data
+          echo "zho..."
+          cat zho/docs.*.jsonl.gz > zho/docs.jsonl.gz
+          echo "fas..."
+          cat fas/docs.*.jsonl.gz > fas/docs.jsonl.gz
+          echo "rus..."
+          cat rus/docs.*.jsonl.gz > rus/docs.jsonl.gz
+      - name: Upload full doc files
+        uses: actions/upload-artifact@v3
+        with: 
+          name: docs
+          path: ./download/data/*/docs.jsonl.gz
+          retention-days: 90
+      - name: Cleanup splitted raw doc files
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: raw_docs
