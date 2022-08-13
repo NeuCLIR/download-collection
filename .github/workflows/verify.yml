@@ -6,9 +6,9 @@ concurrency:
 on:
   schedule:
     - cron: '0 8 * * 0' # run every sunday at (around) 8:00am UTC
-  push: 
-    branch: 
-      - main
+  # push: 
+  #   branch: 
+  #     - main
   workflow_dispatch:
     inputs:
       number_of_jobs:
@@ -115,13 +115,15 @@ jobs:
           retention-days: 90
       - name: Aggregate docs.*.jsonl.gz
         run: |
+          ls -R
           cd download/data
+          mkdir -p zho fas rus
           echo "zho..."
-          cat zho/docs.*.jsonl.gz > zho/docs.jsonl.gz
+          cat raw_docs/zho/docs.*.jsonl.gz > zho/docs.jsonl.gz
           echo "fas..."
-          cat fas/docs.*.jsonl.gz > fas/docs.jsonl.gz
+          cat raw_docs/fas/docs.*.jsonl.gz > fas/docs.jsonl.gz
           echo "rus..."
-          cat rus/docs.*.jsonl.gz > rus/docs.jsonl.gz
+          cat raw_docs/rus/docs.*.jsonl.gz > rus/docs.jsonl.gz
       - name: Upload full doc files
         uses: actions/upload-artifact@v3
         with: 
