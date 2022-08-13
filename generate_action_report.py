@@ -21,8 +21,12 @@ def main():
     
     print("# Mismatch Hashs")
     for lang in mismatches:
-        print(f"## {lang} ({len(mismatches[lang])}/{ndocs[lang]} -- {len(mismatches[lang])/ndocs[lang]*100:.4f}%)")
-        print(pd.DataFrame(mismatches[lang]).to_markdown(index=False))
+        print(f"### {lang} ({len(mismatches[lang])}/{ndocs[lang]} -- {len(mismatches[lang])/ndocs[lang]*100:.4f}%)")
+        if len(mismatches[lang]) > 200:
+            print("More than 200 mismatches found -- see artifacts for complete list.")
+            print(pd.DataFrame(mismatches[lang]).iloc[:200].to_markdown(index=False))
+        else:
+            print(pd.DataFrame(mismatches[lang]).to_markdown(index=False))
     
     with gzip.open('report.jsonl.gz', 'wt') as fw:
         for lang in mismatches:
