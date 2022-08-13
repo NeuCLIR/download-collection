@@ -103,7 +103,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           path: ./download/data
-      - name: test
+      - name: Generate Reports
         run: |
           cd download
           python generate_action_report.py >> $GITHUB_STEP_SUMMARY

@@ -7,7 +7,7 @@ from pathlib import Path
 ndocs = {'fas': 2232016, 'rus': 4627543, 'zho': 3179209}
 
 def main():
-    logs = list(Path('./data').glob("download_log.*.txt"))
+    logs = list(Path('./data/logs').glob("download_log.*.txt"))
     mismatches = {'zho':[], 'fas':[], 'rus':[]}
     for fn in logs:
         for l in fn.open():
