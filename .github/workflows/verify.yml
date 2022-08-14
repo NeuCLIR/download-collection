@@ -115,7 +115,6 @@ jobs:
           retention-days: 90
       - name: Aggregate docs.*.jsonl.gz
         run: |
-          ls -R
           cd download/data
           mkdir -p zho fas rus
           echo "zho..."
