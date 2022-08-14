@@ -72,7 +72,7 @@ def extract_article(record):
     }
 
 
-def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10,
+def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10, saving=True,
                     cc_base_url="https://data.commoncrawl.org/"):
     cc_file, want_idx = info
     saved_docs = defaultdict(list)
@@ -91,11 +91,15 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10,
                     }
 
                     for lang_used in want_idx[rid]:
-                        if want_idx[rid][lang_used] is not None and want_idx[rid][lang_used] != hash_doc(doc):
+                        got_hash = hash_doc(doc)
+                        if want_idx[rid][lang_used] is not None and want_idx[rid][lang_used] != got_hash:
                             if validate:
                                 raise AssertionError(f"md5 hash not matched in {lang_used}")
-                            logging.warning(f'record-id: {rid}, warn: md5 hash not matched in {lang_used}')
-                        saved_docs[lang_used].append(doc)
+                            logging.warning(f'[hash-mismatch] record-id: {rid}, {lang_used}, expecting {want_idx[rid][lang_used]} but got {got_hash}')
+                        # else: 
+                        #     logging.info(f'[hash-matched] record-id: {rid}, {lang_used}')
+                        if saving:
+                            saved_docs[lang_used].append(doc)
 
                     found_idx.add(rid)
                     pbar.update()
@@ -120,10 +124,11 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10,
             pbar.close()
 
     if success:
-        for lang, docs in saved_docs.items():
-            with write_lock(out_paths[lang], 'a') as fw:
-                for d in docs:
-                    fw.write(json.dumps(d, ensure_ascii=False) + '\n')
+        if saving: 
+            for lang, docs in saved_docs.items():
+                with write_lock(out_paths[lang], 'a') as fw:
+                    for d in docs:
+                        fw.write(json.dumps(d, ensure_ascii=False) + '\n')
 
         logging.info(f'done-cc-file:{cc_file}')
 
@@ -156,7 +161,9 @@ def main(args):
     storage = Path(args.storage)
     storage.mkdir(exist_ok=True, parents=True)
 
-    logpath = storage / 'download_log.txt'
+    local_rank_tag = "" if args.rank == -1 else f"{args.rank}."
+
+    logpath = storage / f'download_log.{local_rank_tag}txt'
     if logpath.exists() and args.restart:
         logpath.unlink()
 
@@ -171,7 +178,7 @@ def main(args):
 
     out_paths = {}
     for lang in lang_id_file:
-        out_paths[lang] = storage / lang / 'docs.jsonl'
+        out_paths[lang] = storage / lang / f'docs.{local_rank_tag}jsonl'
         out_paths[lang].parent.mkdir(exist_ok=True, parents=True)
         if out_paths[lang].exists():
             if args.restart:
@@ -195,9 +202,9 @@ def main(args):
     # Dict[cc_file, Dict[id, Dict[langs, hashs] ] ]
     to_capture = defaultdict(lambda : defaultdict(dict))
     for lang, id_files in lang_id_file.items():
-        for id_file in tqdm(id_files, desc=f'building dict for {lang}'):
+        for id_file in tqdm(id_files, desc=f'building dict for {lang}', disable=args.rank>-1):
             fp = gzip.open(id_file) if id_file.endswith('.gz') else open(id_file)
-            for line in tqdm(fp, desc=f'{lang} -- {id_file}', leave=False):
+            for line in tqdm(fp, desc=f'{lang} -- {id_file}', leave=False, disable=args.rank>-1):
                 line = json.loads(line)
                 if line['id'] not in downloaded_doc_ids[lang]:
                     md5 = line['md5'] if 'md5' in line else None
@@ -210,16 +217,25 @@ def main(args):
         raise ValueError("No documents need to be captured.")
 
     worker_ = partial(process_cc_file, out_paths=out_paths, validate=args.check_hash, 
-                      disable_tqdm=args.jobs>1, retry=args.retry,
-                      cc_base_url=args.cc_base_url)
+                      disable_tqdm=(args.jobs>1 or args.rank>-1), retry=args.retry,
+                      saving=(not args.no_save), cc_base_url=args.cc_base_url)
+    it = to_capture.items() 
+    if args.limit > 0:
+        it = map(lambda p: p[0], zip(it, range(args.limit+1)))
     if args.jobs > 1:
         with Pool(args.jobs) as pool:
             list(pool.imap_unordered(
                 worker_,
-                tqdm(to_capture.items(), desc="All files")
+                tqdm(it, desc="All files")
             ))
+    elif args.total_rank > 1 and args.rank > -1:
+        list(map(worker_, 
+            map(lambda p: p[1], 
+                filter(lambda x: x[0]%args.total_rank == args.rank, enumerate(it) )
+            )
+        ))
     else:
-        list(map(worker_, tqdm(to_capture.items(), desc="All files")))
+        list(map(worker_, tqdm(it, desc="All files")))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Download documents from CC.")
@@ -241,6 +257,12 @@ if __name__ == '__main__':
 
     parser.add_argument('--cc_base_url', type=str, default="https://data.commoncrawl.org/",
                         help="The base URL for CC WARC files.")
+
+    # for github actions
+    parser.add_argument('--no_save', action='store_true', default=False)
+    parser.add_argument('--rank', type=int, default=-1)
+    parser.add_argument('--total_rank', type=int, default=1)
+    parser.add_argument('--limit', type=int, default=-1)
 
     main(parser.parse_args())
 
